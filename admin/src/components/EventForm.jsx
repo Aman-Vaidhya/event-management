@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -7,7 +6,19 @@ import {
   Input,
   Stack,
   Textarea,
+  FormErrorMessage,
 } from "@chakra-ui/react";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
+
+// Validation schema using Yup
+const validationSchema = Yup.object({
+  title: Yup.string().required("Title is required"),
+  description: Yup.string().required("Description is required"),
+  date: Yup.string().required("Date is required"),
+  time: Yup.string(),
+  location: Yup.string(),
+});
 
 const initialForm = {
   title: "",
@@ -18,35 +29,10 @@ const initialForm = {
 };
 
 const EventForm = ({ onSubmit, defaultValues = {}, isLoading }) => {
-  const [form, setForm] = useState({ ...initialForm, ...defaultValues });
-
-  // Only update form state ONCE when defaultValues change (like when editing)
-  useEffect(() => {
-    setForm({ ...initialForm, ...defaultValues });
-  }, [JSON.stringify(defaultValues)]); // safely compare object content
-
-  const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!form.title || !form.date) {
-      alert("Title and Date are required");
-      return;
-    }
-
-    onSubmit(form);
-  };
+  const initialValues = { ...initialForm, ...defaultValues };
 
   return (
     <Box
-      as="form"
-      onSubmit={handleSubmit}
       maxW="lg"
       mx="auto"
       mt={8}
@@ -56,61 +42,73 @@ const EventForm = ({ onSubmit, defaultValues = {}, isLoading }) => {
       boxShadow="md"
       bg="white"
     >
-      <Stack spacing={5}>
-        <FormControl isRequired>
-          <FormLabel>Title</FormLabel>
-          <Input
-            name="title"
-            placeholder="Event title"
-            value={form.title}
-            onChange={handleChange}
-          />
-        </FormControl>
+      <Formik
+        initialValues={initialValues}
+        enableReinitialize
+        validationSchema={validationSchema}
+        onSubmit={(values, actions) => {
+          onSubmit(values);
+          actions.setSubmitting(false);
+        }}
+      >
+        {({ isSubmitting }) => (
+          <Form>
+            <Stack spacing={5}>
+              <Field name="title">
+                {({ field, form }) => (
+                  <FormControl isInvalid={form.errors.title && form.touched.title}>
+                    <FormLabel>Title</FormLabel>
+                    <Input {...field} placeholder="Event title" />
+                    <FormErrorMessage>{form.errors.title}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
 
-        <FormControl>
-          <FormLabel>Description</FormLabel>
-          <Textarea
-            name="description"
-            placeholder="Event description"
-            value={form.description}
-            onChange={handleChange}
-          />
-        </FormControl>
+              <Field name="description">
+                {({ field, form }) => (
+                  <FormControl isInvalid={form.errors.description && form.touched.description}>
+                    <FormLabel>Description</FormLabel>
+                    <Textarea {...field} placeholder="Event description" />
+                    <FormErrorMessage>{form.errors.description}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
 
-        <FormControl isRequired>
-          <FormLabel>Date</FormLabel>
-          <Input
-            name="date"
-            type="date"
-            value={form.date}
-            onChange={handleChange}
-          />
-        </FormControl>
+              <Field name="date">
+                {({ field, form }) => (
+                  <FormControl isInvalid={form.errors.date && form.touched.date}>
+                    <FormLabel>Date</FormLabel>
+                    <Input {...field} type="date" />
+                    <FormErrorMessage>{form.errors.date}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
 
-        <FormControl>
-          <FormLabel>Time</FormLabel>
-          <Input
-            name="time"
-            placeholder="HH:MM"
-            value={form.time}
-            onChange={handleChange}
-          />
-        </FormControl>
+              <Field name="time">
+                {({ field }) => (
+                  <FormControl>
+                    <FormLabel>Time</FormLabel>
+                    <Input {...field} type="time" />
+                  </FormControl>
+                )}
+              </Field>
 
-        <FormControl>
-          <FormLabel>Location</FormLabel>
-          <Input
-            name="location"
-            placeholder="Event location"
-            value={form.location}
-            onChange={handleChange}
-          />
-        </FormControl>
+              <Field name="location">
+                {({ field }) => (
+                  <FormControl>
+                    <FormLabel>Location</FormLabel>
+                    <Input {...field} placeholder="Event location" />
+                  </FormControl>
+                )}
+              </Field>
 
-        <Button type="submit" colorScheme="blue" isLoading={isLoading}>
-          {isLoading ? "Saving..." : "Submit"}
-        </Button>
-      </Stack>
+              <Button type="submit" colorScheme="blue" isLoading={isSubmitting || isLoading}>
+                {isLoading ? "Saving..." : "Submit"}
+              </Button>
+            </Stack>
+          </Form>
+        )}
+      </Formik>
     </Box>
   );
 };

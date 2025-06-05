@@ -3,15 +3,24 @@ import { Box, Button, Flex, Heading, Stack, Text, HStack, Icon } from '@chakra-u
 import { MdLocationOn, MdCalendarMonth, MdAccessTime } from 'react-icons/md';
 import { useDeleteEvent } from '../hooks/useEvents';
 import { Link } from 'react-router-dom';
+import useCustomToast from '../utils/useCustomToast';
 
 const EventCard = ({ events }) => {
     const { mutate: deleteEvent } = useDeleteEvent();
+    const toast = useCustomToast();
 
     const handleDelete = (id) => {
         if (confirm("Delete this event?")) {
             deleteEvent(id, {
-                onSuccess: () => alert("Deleted successfully"),
-                onError: () => alert("Delete failed"),
+                onSuccess: () => toast({
+                    title: "Deleted successfully",
+                    description: "The event was deleted successfully.",
+                    status: "success",
+                }),
+                onError: () => toast({
+                    title: "Deleted Failed",
+                    status: "error",
+                }),
             });
         }
     };
@@ -45,7 +54,7 @@ const EventCard = ({ events }) => {
                         )}
 
                         <HStack spacing={2} align="center">
-                             <MdLocationOn size={20} />
+                            <MdLocationOn size={20} />
                             <Text>{event.location || 'No location'}</Text>
                         </HStack>
                     </Stack>

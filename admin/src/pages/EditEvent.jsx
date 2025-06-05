@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEvents, useUpdateEvent } from "../hooks/useEvents";
 import EventForm from "../components/EventForm";
 import { Heading } from '@chakra-ui/react';
+import useCustomToast from "../utils/useCustomToast";
 
 const EditEvent = () => {
   const { id } = useParams();
@@ -12,16 +13,24 @@ const EditEvent = () => {
   const targetEvent = flatList.find((e) => e._id === id); // or e.id
 
   const navigate = useNavigate();
-
+  const toast = useCustomToast();
   const handleSubmit = (form) => {
     updateEvent(
       { id, data: form },
       {
         onSuccess: () => {
-          alert("Updated successfully");
+          // alert("Updated successfully");
+          toast({
+            title: "Updated successfully",
+            description: "The event was updated successfully.",
+            status: "success",
+          });
           navigate("/");
         },
-        onError: () => alert("Update failed"),
+        onError: () => toast({
+            title: "Updated failed",
+            status: "error",
+          }),
       }
     );
   };
